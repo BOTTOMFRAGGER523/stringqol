@@ -1,0 +1,11 @@
+bench/bench_c
+bench/bench_c.exe
+
+bench/bench_cpp
+bench/bench_cpp.exe
+
+test_suite/c_test
+test_suite/c_test.exe
+
+test_suite/cpp_test
+test_suite/cpp_test.exe
