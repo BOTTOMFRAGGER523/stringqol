@@ -4,21 +4,13 @@ A simple & minimal String QoL (Quality of Life) single header library designed t
 Contributions are welcome!
 
 ## Goals
-- All memory owned by the library
-- Memory safe
-- C/C++ Support
-- Portable
-- Single header library
-- Lightweight
-- Somewhat Fast
-
-## Features
-- Memory safe
-- C/C++ Support
-- Portable
-- Single header
-- Extremely lightweight
-- Somewhat Fast
+- [X] All memory owned by the library
+- [X] Memory safe
+- [X] C Support and freestanding C++ support
+- [X] Portable
+- [X] Single header
+- [X] Lightweight
+- [X] Somewhat Fast
 
 ## What it isn't
 - A full fletched string library with Unicode and UTF-8 support.
@@ -27,12 +19,15 @@ Contributions are welcome!
 ![](resources/example_bench.png)
 
 ## Building
+### Installing
+- Just run `make install` (sudo might be needed) and you have installed StringQOL headers.
+
 ### Running tests
 - Just run `make test` and you have your test results.
 
 ### Running benchmarks
 - Just run `python bench.py` (No dependencies required) and you have your benchmarks.
-- Read from Median to get the average result, Min to get the fastest and P95 to get the slowest.
+- Read from Median to get the average result, Min to get the fastest and Max to get the slowest.
 
 ## Q&A
 <details>
