@@ -45,7 +45,7 @@ SQOL_STATUS delete_arena(StringArena *a);
 #endif
 
 // Should only be uncommented when editing/developing
-#define STRING_QOL_IMPL
+// #define STRING_QOL_IMPL
 
 // Implementation
 #ifdef STRING_QOL_IMPL
