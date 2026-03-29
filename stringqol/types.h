@@ -5,10 +5,11 @@
 #include "config.h"
 
 // Types
+#ifdef __cplusplus
+#define SQOL_STATUS bool
+#else
 #define SQOL_STATUS unsigned char
-// #define SQOL_BOOL   unsigned char
-#define SQOL_TRUE 1
-#define SQOL_FALSE 0
+#endif
 
 #define SQOL_SUCCESS 1
 #define SQOL_FAILURE 0
