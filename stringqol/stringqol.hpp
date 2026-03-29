@@ -12,6 +12,13 @@
 #error "Include stringqol.h instead!"
 #endif
 
+// Check if its not a freestanding environment and warn the user to use
+// std::string instead
+#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1 ||                        \
+    defined(__FREESTANDING__)
+#warning "Use std::string instead!"
+#endif
+
 #include "config.h"
 #include "stringqol.h"
 #include "types.h"
@@ -40,7 +47,7 @@ public:
   StringQOL::String add_to_arena(StringQOL::Arena &a);
 #endif
 
-  // Do not touch unless you want to access the internal state itself!
+  // Do not touch unless you want to access the internal C state itself!
   ::String *get_internal();
   ~String();
 };
@@ -58,7 +65,7 @@ public:
   SQOL_STATUS reset(SQOL_SIZE new_cap);
   SQOL_STATUS reset();
 
-  // Do not touch unless you want to access the internal state itself!
+  // Do not touch unless you want to access the internal C state itself!
   ::StringArena *get_internal();
   ~Arena();
 };
