@@ -6,6 +6,8 @@
 // string work commonly found in C.
 // -------------------------------------------------------------------------
 
+// TODO: Make ownership clear in the arena/string thingy
+
 #ifndef STRING_QOL
 #define STRING_QOL
 
@@ -21,22 +23,64 @@ extern "C" {
 
 // Interface
 
+// Creates a new string
+// @param str String literal
 String *new_string(const char *str);
+
+// Appends a char to the string
+// @param s String that's the one getting appended
+// @param ch Char that is to be appended to `s`
 SQOL_STATUS string_append(String *s, char ch);
+
+// Appends a string literal to `s`
+// @param s String that's the one getting appended
+// @param str String literal that is to be appended to `s`
 SQOL_STATUS string_append_str(String *s, char *str);
+
+// Appends `src` to `dst`
+// @param dst Destination string
+// @param src Source string
 SQOL_STATUS string_append_string(String *dst, String *src);
+
+// Copies a string from `src` to `dst`
+// @param dst Destination string
+// @param src Source string
 SQOL_STATUS string_cpy(String *dst, String *src);
+
+// Replaces `s` with a string literal
+// @param s String to be replaced
+// @param new_str String literal that is replacing
 SQOL_STATUS string_replace(String *s, const char *new_str);
 #ifdef SQOL_ARENA_INCLUDED
-String *string_add_to_arena(String *str, StringArena *arena);
+// Adds `str` to `arena` and transfers ownership the the arena. Should not call
+// `delete_string` after calling this
+// @param s String to be added to `arena`
+// @param arena Arena to be getting `s`
+String *string_add_to_arena(String *s, StringArena *arena);
 #endif
+
+// Deletes the string
+// @param string String to be deleted
 SQOL_STATUS delete_string(String *string);
 
 // Arena Interface
 #ifdef SQOL_ARENA_INCLUDED
+// Creates a new String Arena
+// @param cap The starting cap/limit of the arena
 StringArena *new_string_arena(SQOL_SIZE cap);
+
+// Adds a string to the String Arena
+// @param a The arena to be getting a string
+// @param str The string to be added to the string arena
 String *arena_add_string(StringArena *a, String *str);
+
+// Frees all the string and resets the arena
+// @param a The arena to be resetted
+// @param new_cap The new cap/limit of the arena
 SQOL_STATUS arena_reset(StringArena *a, SQOL_SIZE new_cap);
+
+// Deletes the arena and all its strings.
+// @param a The arena to be deleted
 SQOL_STATUS delete_arena(StringArena *a);
 #endif
 

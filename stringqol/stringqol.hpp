@@ -6,6 +6,8 @@
 // std::string instead.
 // ----------------------------------------------------------------------
 
+// TODO: Docs
+
 #ifndef STRING_QOL_CPP
 #define STRING_QOL_CPP
 #ifndef __cplusplus
@@ -35,20 +37,49 @@ private:
   ::String *internal;
 
 public:
+  // Creates a string object
+  // @param str The string literal to be added to the string object
   String(const char *str);
+
+  // Appends a char to the string object
+  // @param ch The char to be appended
   SQOL_STATUS append(char ch);
+
+  // Appends a string literal to the string object
+  // @param str The string literal to be appended
   SQOL_STATUS append(char *str);
+
+  // Appends another string object to the current string object
+  // @param string The string to be appended
   SQOL_STATUS append(StringQOL::String &string);
+
+  // Copies `src` to the current string object
+  // @param src The string to be copied to the current string object
   SQOL_STATUS copy(StringQOL::String &src);
+
+  // Copies the current string object to `dst`
+  // @param dst The destination/target of the copy
   SQOL_STATUS copy_to(StringQOL::String &dst);
+
+  // Replaces the current string with a string literal
+  // @param str The string literal to be replacing
   SQOL_STATUS replace(const char *str);
+
+  // Replaces the current string object with another string object
+  // @param src The string object to be replacing
   SQOL_STATUS replace(StringQOL::String &src);
 #ifdef SQOL_ARENA_INCLUDED
+  // Adds the current string object to the arena object `a` and transfering
+  // ownership to the arena
+  // @param a The arena object receiving the string object
   StringQOL::String add_to_arena(StringQOL::Arena &a);
 #endif
 
+  // Returns the internal String C state.
   // Do not touch unless you want to access the internal C state itself!
   ::String *get_internal();
+
+  // Deletes the string object
   ~String();
 };
 
@@ -58,15 +89,32 @@ private:
   ::StringArena *internal;
 
 public:
+  // Creates an Arena object
+  // @param cap The cap/limit of the arena
   Arena(SQOL_SIZE cap);
+
+  // Creates an Arena object with the default cap value
   Arena();
+
+  // Adds a string to the arena
+  // @param str The string to be added to the arena
   StringQOL::String add_string(StringQOL::String &str);
+
+  // Adds a string literal to the arena
+  // @param str The string literal to be added to the arena
   StringQOL::String add_string(const char *str);
+
+  // Resets the arena and sets the cap value to `new_cap`
+  // @param new_cap The new cap value to be set as the cap value
   SQOL_STATUS reset(SQOL_SIZE new_cap);
+
+  // Resets the arena and uses the default cap value
   SQOL_STATUS reset();
 
   // Do not touch unless you want to access the internal C state itself!
   ::StringArena *get_internal();
+
+  // Deletes the arena object
   ~Arena();
 };
 #endif
