@@ -3,9 +3,6 @@ A simple & minimal String QoL (Quality of Life) single header library designed t
 
 Contributions are welcome!
 
-## Example benchmark on weak hardware
-![](resources/example_bench.png)
-
 ## Goals
 - ✅ All memory owned by the library
 - ✅ Memory safe
@@ -17,7 +14,7 @@ Contributions are welcome!
 
 ## Building
 ### Installing
-- Run `make install` (sudo might be needed), it will install to /usr/local/include/stringqol
+- Run `make install` (sudo might be needed), it will install to `/usr/local/include/stringqol`
 
 ### Running tests
 - Run `make test` and you have your test results.
@@ -35,8 +32,8 @@ I wanted something lightweight, fast, portable and a single header library that 
 </details>
 
 <details>
-<br>
 <summary>Will you maintain it?</summary>
+<br>
 Only if there's optimization to do, security fixes, bug fixes, or if I want to add another feature.
 <br>
 </details>
