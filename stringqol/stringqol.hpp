@@ -6,8 +6,6 @@
 // std::string instead.
 // ----------------------------------------------------------------------
 
-// TODO: Docs
-
 #ifndef STRING_QOL_CPP
 #define STRING_QOL_CPP
 #ifndef __cplusplus
