@@ -22,6 +22,7 @@ typedef struct String {
   char *string;
   // Note to self: s->string[s->size] should always point to the NULL terminator
   SQOL_SIZE size;
+  SQOL_SIZE idx; // for peek() consume() & match()
   SQOL_BOOL arena_owned;
 } String;
 

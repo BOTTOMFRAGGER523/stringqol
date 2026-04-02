@@ -49,6 +49,26 @@ SQOL_STATUS string_cpy(String *dst, String *src);
 // @param s String to be replaced
 // @param new_str String literal that is replacing
 SQOL_STATUS string_replace(String *s, const char *new_str);
+
+// Peeks the current character and returns it.
+// @param s String to be peeked
+char string_peek(String *s);
+
+// Peeks the next character and returns it.
+// If out of bounds then it returns \0
+// @param s String to be peeked
+char string_peek_next(String *s);
+
+// Consumes/Advances to the next character and returns the current character
+// before consuming/advancing, returns \0 if out of bounds
+// @param s String to be consumed/advanced
+char string_consume(String *s);
+
+// Matches the next character, if both match it consumes/advances and returns
+// true if not it returns false and doesn't consume/advance
+// @param s String to be matched against `ch`
+// @param ch Char to be matched against the next character in `s`
+SQOL_BOOL string_match(String *s, char ch);
 #ifdef SQOL_ARENA_INCLUDED
 // Adds `str` to `arena` and transfers ownership the the arena. Should not call
 // `delete_string` after calling this
@@ -128,6 +148,7 @@ String *new_string(const char *str) {
   // Note to self: s->string[s->size] should always point to the NULL terminator
   s->size = len;
   s->arena_owned = SQOL_FALSE;
+  s->idx = 0;
   return s;
 }
 
@@ -202,6 +223,33 @@ SQOL_STATUS string_replace(String *s, const char *new_str) {
   s->string[s->size] = '\0';
 
   return SQOL_SUCCESS;
+}
+
+char string_peek(String *s) { return s->string[s->idx]; }
+
+char string_peek_next(String *s) {
+  if (s->idx < s->size) {
+    s->string[s->idx + 1];
+  }
+
+  return '\0';
+}
+
+char string_consume(String *s) {
+  if (s->idx < s->size) {
+    return s->string[s->idx++];
+  }
+
+  return '\0';
+}
+
+SQOL_BOOL string_match(String *s, char ch) {
+  if (string_peek(s) == ch) {
+    string_consume(s);
+    return SQOL_TRUE;
+  }
+
+  return SQOL_FALSE;
 }
 
 #ifdef SQOL_ARENA_INCLUDED
