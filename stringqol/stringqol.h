@@ -6,8 +6,6 @@
 // string work commonly found in C.
 // -------------------------------------------------------------------------
 
-// TODO: Make ownership clear in the arena/string thingy
-
 #ifndef STRING_QOL
 #define STRING_QOL
 
@@ -129,6 +127,7 @@ String *new_string(const char *str) {
 
   // Note to self: s->string[s->size] should always point to the NULL terminator
   s->size = len;
+  s->arena_owned = SQOL_FALSE;
   return s;
 }
 
@@ -214,10 +213,14 @@ String *string_add_to_arena(String *s, StringArena *a) {
 SQOL_STATUS delete_string(String *s) {
   NULL_CHECK(s, SQOL_FAILURE)
 
-  SQOL_FREE(s->string);
-  SQOL_FREE(s);
+  if (!s->arena_owned) {
+    SQOL_FREE(s->string);
+    SQOL_FREE(s);
 
-  return SQOL_SUCCESS;
+    return SQOL_SUCCESS;
+  }
+
+  return SQOL_FAILURE;
 }
 
 // Arena implementation
@@ -260,12 +263,20 @@ String *arena_add_string(StringArena *a, String *s) {
     a->strings[a->count - 1] = s;
   }
 
+  s->arena_owned = SQOL_TRUE;
   return a->strings[a->count - 1];
 }
 
 SQOL_STATUS arena_reset(StringArena *a, SQOL_SIZE cap) {
   NULL_CHECK(a, SQOL_FAILURE)
   NULL_CHECK(a->strings, SQOL_FAILURE);
+
+  for (size_t i = 0; i < a->count; i++) {
+    if (a->strings[i]) {
+      SQOL_FREE(a->strings[i]->string);
+      SQOL_FREE(a->strings[i]);
+    }
+  }
 
   SQOL_FREE(a->strings);
   a->strings = (String **)SQOL_MALLOC(sizeof(String *) * cap);
@@ -278,6 +289,13 @@ SQOL_STATUS arena_reset(StringArena *a, SQOL_SIZE cap) {
 SQOL_STATUS delete_arena(StringArena *a) {
   NULL_CHECK(a, SQOL_FAILURE)
   NULL_CHECK(a->strings, SQOL_FAILURE)
+
+  for (size_t i = 0; i < a->count; i++) {
+    if (a->strings[i]) {
+      SQOL_FREE(a->strings[i]->string);
+      SQOL_FREE(a->strings[i]);
+    }
+  }
 
   SQOL_FREE(a->strings);
   SQOL_FREE(a);
