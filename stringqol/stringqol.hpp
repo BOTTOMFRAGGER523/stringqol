@@ -45,7 +45,7 @@ public:
 
   // Appends a string literal to the string object
   // @param str The string literal to be appended
-  SQOL_STATUS append(char *str);
+  SQOL_STATUS append(const char *str);
 
   // Appends another string object to the current string object
   // @param string The string to be appended
@@ -131,7 +131,7 @@ SQOL_STATUS StringQOL::String::append(char ch) {
   return string_append(internal, ch);
 }
 
-SQOL_STATUS StringQOL::String::append(char *str) {
+SQOL_STATUS StringQOL::String::append(const char *str) {
   return string_append_str(internal, str);
 }
 
