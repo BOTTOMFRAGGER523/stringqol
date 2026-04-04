@@ -50,6 +50,20 @@ SQOL_STATUS string_cpy(String *dst, String *src);
 // @param new_str String literal that is replacing
 SQOL_STATUS string_replace(String *s, const char *new_str);
 
+// Resets `s` to a clean slate
+// @param s String to be reset
+SQOL_STATUS string_reset(String *s);
+
+// Compares `s` with a string literal
+// @param s String to be compared against `str`
+// @param str String literal to be compared against `s`
+SQOL_BOOL string_compare(String *s, const char *str);
+
+// Compares `s` with another string object
+// @param s String to be compared against `string`
+// @param string String to be compared against `s`
+SQOL_BOOL string_compare_string(String *s, String *string);
+
 // Peeks the current character and returns it.
 // @param s String to be peeked
 char string_peek(String *s);
@@ -223,6 +237,40 @@ SQOL_STATUS string_replace(String *s, const char *new_str) {
   s->string[s->size] = '\0';
 
   return SQOL_SUCCESS;
+}
+
+SQOL_STATUS string_reset(String *s) {
+  NULL_CHECK(s, SQOL_FAILURE)
+
+  // Allocate 256 bytes by default
+  char *temp = (char *)SQOL_MALLOC(SQOL_ARENA_DEFAULT_CAP_VALUE);
+  NULL_CHECK(temp, SQOL_FAILURE)
+
+  s->size = 255;
+  s->idx = 0;
+  return SQOL_SUCCESS;
+}
+
+SQOL_STATUS string_compare(String *s, const char *str) {
+  NULL_CHECK(s, SQOL_FAILURE)
+  NULL_CHECK(str, SQOL_FAILURE)
+
+  if (strcmp(s->string, str) == 0) {
+    return SQOL_SUCCESS;
+  }
+
+  return SQOL_FAILURE;
+}
+
+SQOL_STATUS string_compare_string(String *s, String *string) {
+  NULL_CHECK(s, SQOL_FAILURE)
+  NULL_CHECK(string, SQOL_FAILURE)
+
+  if (strcmp(s->string, string->string) == 0) {
+    return SQOL_SUCCESS;
+  }
+
+  return SQOL_FAILURE;
 }
 
 char string_peek(String *s) { return s->string[s->idx]; }
