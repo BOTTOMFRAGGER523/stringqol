@@ -64,6 +64,10 @@ SQOL_BOOL string_compare(String *s, const char *str);
 // @param string String to be compared against `s`
 SQOL_BOOL string_compare_string(String *s, String *string);
 
+// Removes the top character of `s`
+// @param s String to have the top character removed
+SQOL_STATUS string_backspace(String *s);
+
 // Peeks the current character and returns it.
 // @param s String to be peeked
 char string_peek(String *s);
@@ -121,7 +125,7 @@ SQOL_STATUS delete_arena(StringArena *a);
 #endif
 
 // Should only be uncommented when editing/developing
-#define STRING_QOL_IMPL
+// #define STRING_QOL_IMPL
 
 // Implementation
 #ifdef STRING_QOL_IMPL
@@ -246,7 +250,7 @@ SQOL_STATUS string_reset(String *s) {
   char *temp = (char *)SQOL_MALLOC(SQOL_ARENA_DEFAULT_CAP_VALUE);
   NULL_CHECK(temp, SQOL_FAILURE)
 
-  s->size = 255;
+  s->size = SQOL_ARENA_DEFAULT_CAP_VALUE - 1;
   s->cursor = 0;
   return SQOL_SUCCESS;
 }
@@ -273,11 +277,20 @@ SQOL_STATUS string_compare_string(String *s, String *string) {
   return SQOL_FAILURE;
 }
 
+SQOL_STATUS string_backspace(String *s) {
+  NULL_CHECK(s, SQOL_FAILURE)
+  if (s->size == 0)
+    return SQOL_FAILURE;
+  s->size--;
+  s->string[s->size] = '\0';
+  return SQOL_SUCCESS;
+}
+
 char string_peek(String *s) { return s->string[s->cursor]; }
 
 char string_peek_next(String *s) {
   if (s->cursor < s->size) {
-    s->string[s->cursor + 1];
+    return s->string[s->cursor + 1];
   }
 
   return '\0';
