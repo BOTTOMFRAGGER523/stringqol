@@ -121,7 +121,7 @@ SQOL_STATUS delete_arena(StringArena *a);
 #endif
 
 // Should only be uncommented when editing/developing
-// #define STRING_QOL_IMPL
+#define STRING_QOL_IMPL
 
 // Implementation
 #ifdef STRING_QOL_IMPL
@@ -162,7 +162,7 @@ String *new_string(const char *str) {
   // Note to self: s->string[s->size] should always point to the NULL terminator
   s->size = len;
   s->arena_owned = SQOL_FALSE;
-  s->idx = 0;
+  s->cursor = 0;
   return s;
 }
 
@@ -247,7 +247,7 @@ SQOL_STATUS string_reset(String *s) {
   NULL_CHECK(temp, SQOL_FAILURE)
 
   s->size = 255;
-  s->idx = 0;
+  s->cursor = 0;
   return SQOL_SUCCESS;
 }
 
@@ -273,19 +273,19 @@ SQOL_STATUS string_compare_string(String *s, String *string) {
   return SQOL_FAILURE;
 }
 
-char string_peek(String *s) { return s->string[s->idx]; }
+char string_peek(String *s) { return s->string[s->cursor]; }
 
 char string_peek_next(String *s) {
-  if (s->idx < s->size) {
-    s->string[s->idx + 1];
+  if (s->cursor < s->size) {
+    s->string[s->cursor + 1];
   }
 
   return '\0';
 }
 
 char string_consume(String *s) {
-  if (s->idx < s->size) {
-    return s->string[s->idx++];
+  if (s->cursor < s->size) {
+    return s->string[s->cursor++];
   }
 
   return '\0';
