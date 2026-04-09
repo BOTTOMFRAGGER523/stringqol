@@ -33,7 +33,7 @@ SQOL_STATUS string_append(String *s, char ch);
 // Appends a string literal to `s`
 // @param s String that's the one getting appended
 // @param str String literal that is to be appended to `s`
-SQOL_STATUS string_append_str(String *s, char *str);
+SQOL_STATUS string_append_str(String *s, const char *str);
 
 // Appends `src` to `dst`
 // @param dst Destination string
@@ -140,7 +140,7 @@ extern "C" {
 
 // Note: rvalue of sqol_strlen == s->size
 // Note: if 0 is returned either the string is empty or STR is NULL
-SQOL_SIZE sqol_strlen(const char *str) {
+static SQOL_SIZE sqol_strlen(const char *str) {
   NULL_CHECK(str, SQOL_FAILURE)
 
   SQOL_SIZE i = 0;
@@ -149,6 +149,35 @@ SQOL_SIZE sqol_strlen(const char *str) {
   }
 
   return i;
+}
+
+static inline size_t next_power_of_2(size_t x) {
+#if SIZE_MAX == UINT64_MAX
+  if (x == 0)
+    return 1; // edge case
+  x--;        // subtract 1 to handle exact powers
+  x |= x >> 1;
+  x |= x >> 2;
+  x |= x >> 4;
+  x |= x >> 8;
+  x |= x >> 16;
+  x |= x >> 32;
+  x++; // now x is next power of 2 ≥ original
+  return x;
+#elif SIZE_MAX == UINT32_MAX
+  if (x == 0)
+    return 1; // edge case
+  x--;        // subtract 1 to handle exact powers
+  x |= x >> 1;
+  x |= x >> 2;
+  x |= x >> 4;
+  x |= x >> 8;
+  x |= x >> 16;
+  x++; // now x is next power of 2 >= original
+  return x;
+#else
+#error Unsupported SIZE_MAX
+#endif
 }
 
 // Implementation of strings
@@ -165,6 +194,7 @@ String *new_string(const char *str) {
 
   // Note to self: s->string[s->size] should always point to the NULL terminator
   s->size = len;
+  s->cap = next_power_of_2(len);
   s->arena_owned = SQOL_FALSE;
   s->cursor = 0;
   return s;
@@ -175,9 +205,19 @@ SQOL_STATUS string_append(String *s, char ch) {
   if (ch == '\0')
     return SQOL_FAILURE;
 
-  char *temp = (char *)SQOL_REALLOC(s->string, s->size + 2);
-  NULL_CHECK(temp, SQOL_FAILURE)
-  s->string = temp;
+#ifndef SQOL_SHOULD_INCREMENT
+  if (s->size + 1 >= s->cap) {
+    s->cap *= 2;
+    s->cap = next_power_of_2(s->cap);
+#else
+  s->cap += 2;
+#endif
+    char *temp = (char *)SQOL_REALLOC(s->string, s->cap);
+    NULL_CHECK(temp, SQOL_FAILURE)
+    s->string = temp;
+#ifndef SQOL_SHOULD_INCREMENT
+  }
+#endif
 
   s->string[s->size] = ch;
   s->size++;
@@ -186,14 +226,27 @@ SQOL_STATUS string_append(String *s, char ch) {
   return SQOL_SUCCESS;
 }
 
-SQOL_STATUS string_append_str(String *s, char *str) {
+SQOL_STATUS string_append_str(String *s, const char *str) {
   NULL_CHECK(s, SQOL_FAILURE)
   NULL_CHECK(str, SQOL_FAILURE)
-
   SQOL_SIZE append_len = sqol_strlen(str);
-  char *temp = (char *)SQOL_REALLOC(s->string, s->size + append_len + 1);
-  NULL_CHECK(temp, SQOL_FAILURE)
-  s->string = temp;
+
+#ifndef SQOL_SHOULD_INCREMENT
+  if (s->size + append_len >= s->cap) {
+    s->cap *= 2;
+    while (s->cap <= s->size + append_len) {
+      s->cap *= 2;
+    }
+    s->cap = next_power_of_2(s->cap);
+#else
+  s->cap += append_len + 2;
+#endif
+    char *temp = (char *)SQOL_REALLOC(s->string, s->cap);
+    NULL_CHECK(temp, SQOL_FAILURE)
+    s->string = temp;
+#ifndef SQOL_SHOULD_INCREMENT
+  }
+#endif
 
   SQOL_MEMCPY(s->string + s->size, str, append_len);
   s->size += append_len;
@@ -212,8 +265,19 @@ SQOL_STATUS string_append_string(String *dst, String *src) {
 SQOL_STATUS string_cpy(String *dst, String *src) {
   NULL_CHECK(dst, SQOL_FAILURE)
   NULL_CHECK(src, SQOL_FAILURE)
-  if (dst->size < src->size) {
-    char *temp = (char *)SQOL_REALLOC(dst->string, src->size + 1);
+  if (dst->cap <= src->size) {
+#ifndef SQOL_SHOULD_INCREMENT
+    dst->cap *= 2;
+    // Edge case
+    while (dst->cap <= src->size) {
+      dst->cap *= 2;
+    }
+
+    dst->cap = next_power_of_2(dst->cap);
+#else
+    dst->cap += 1 + src->cap;
+#endif
+    char *temp = (char *)SQOL_REALLOC(dst->string, dst->cap);
     NULL_CHECK(temp, SQOL_FAILURE);
     dst->string = temp;
   }
@@ -246,17 +310,25 @@ SQOL_STATUS string_replace(String *s, const char *new_str) {
 SQOL_STATUS string_reset(String *s) {
   NULL_CHECK(s, SQOL_FAILURE)
 
+  // Free old string if not arena managed
+  if (s->string && !s->arena_owned) {
+    SQOL_FREE(s->string);
+  }
+
   // Allocate 256 bytes by default
   char *temp = (char *)SQOL_MALLOC(SQOL_ARENA_DEFAULT_CAP_VALUE);
   NULL_CHECK(temp, SQOL_FAILURE)
 
-  s->size = SQOL_ARENA_DEFAULT_CAP_VALUE - 1;
+  s->string = temp;
+  s->size = 0;
+  s->cap = SQOL_ARENA_DEFAULT_CAP_VALUE;
   s->cursor = 0;
   return SQOL_SUCCESS;
 }
 
 SQOL_STATUS string_compare(String *s, const char *str) {
   NULL_CHECK(s, SQOL_FAILURE)
+  NULL_CHECK(s->string, SQOL_FAILURE)
   NULL_CHECK(str, SQOL_FAILURE)
 
   if (strcmp(s->string, str) == 0) {
@@ -268,6 +340,7 @@ SQOL_STATUS string_compare(String *s, const char *str) {
 
 SQOL_STATUS string_compare_string(String *s, String *string) {
   NULL_CHECK(s, SQOL_FAILURE)
+  NULL_CHECK(s->string, SQOL_FAILURE)
   NULL_CHECK(string, SQOL_FAILURE)
 
   if (strcmp(s->string, string->string) == 0) {
@@ -279,6 +352,7 @@ SQOL_STATUS string_compare_string(String *s, String *string) {
 
 SQOL_STATUS string_backspace(String *s) {
   NULL_CHECK(s, SQOL_FAILURE)
+  NULL_CHECK(s->string, SQOL_FAILURE)
   if (s->size == 0)
     return SQOL_FAILURE;
   s->size--;
@@ -286,9 +360,15 @@ SQOL_STATUS string_backspace(String *s) {
   return SQOL_SUCCESS;
 }
 
-char string_peek(String *s) { return s->string[s->cursor]; }
+char string_peek(String *s) {
+  NULL_CHECK(s, SQOL_FAILURE)
+  NULL_CHECK(s->string, SQOL_FAILURE)
+  return s->string[s->cursor];
+}
 
 char string_peek_next(String *s) {
+  NULL_CHECK(s, SQOL_FAILURE)
+  NULL_CHECK(s->string, SQOL_FAILURE)
   if (s->cursor < s->size) {
     return s->string[s->cursor + 1];
   }
@@ -297,6 +377,8 @@ char string_peek_next(String *s) {
 }
 
 char string_consume(String *s) {
+  NULL_CHECK(s, SQOL_FAILURE)
+  NULL_CHECK(s->string, SQOL_FAILURE)
   if (s->cursor < s->size) {
     return s->string[s->cursor++];
   }
@@ -305,6 +387,8 @@ char string_consume(String *s) {
 }
 
 SQOL_BOOL string_match(String *s, char ch) {
+  NULL_CHECK(s, SQOL_FAILURE)
+  NULL_CHECK(s->string, SQOL_FAILURE)
   if (string_peek(s) == ch) {
     string_consume(s);
     return SQOL_TRUE;
@@ -323,7 +407,8 @@ SQOL_STATUS delete_string(String *s) {
   NULL_CHECK(s, SQOL_FAILURE)
 
   if (!s->arena_owned) {
-    SQOL_FREE(s->string);
+    if (s->string)
+      SQOL_FREE(s->string);
     SQOL_FREE(s);
 
     return SQOL_SUCCESS;

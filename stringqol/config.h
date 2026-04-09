@@ -1,6 +1,6 @@
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // clang-format off
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Configuration file for StringQOL.
 //
 // Note: Settings marked with an asterisk at the end should be
@@ -17,14 +17,15 @@
 //          SQOL_ARENA_CAN_INCREASE_CAP: Flag that configures whether or not the arena can increase the cap/limit of allocations.
 //              SQOL_ARENA_DEFAULT_CAP_INCREMENT: Sets how much the arena increments the cap each time it hits its limit.
 //          SQOL_ARENA_DEFAULT_CAP_VALUE: Sets the default cap value for the arena if left to zero or undefined.
-//      SQOL_SIZE*: Sets the macro for the type. It should be a size_t equivalent
+//      SQOL_SIZE*: Sets the macro for the type. It should be a size_t equivalent.
 //      SQOL_MALLOC*: Sets the function name for malloc().
 //      SQOL_FREE*: Sets the function name for free().
 //      SQOL_REALLOC*: Sets the function name for realloc().
+//      SQOL_SHOULD_INCREMENT: Flag that configures whether or not string appends should be O(1) or O(n). Should not be defined unless you have a specific reason not to.
 //
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // clang-format on
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #ifndef SQOL_CONFIG
 #define SQOL_CONFIG
@@ -34,6 +35,11 @@
 #ifndef SQOL_USE_STD_LIB
     #define SQOL_USE_STD_LIB
 #endif // !SQOL_USE_STDLIB
+
+// If defined it will use (s->cap + size) + 2 instead of (s->cap + size) * 2
+#ifndef SQOL_SHOULD_INCREMENT
+    //#define SQOL_SHOULD_INCREMENT
+#endif // !SQOL_SHOULD_INCREMENT
 
 // Configurations for arena
 #ifndef SQOL_ARENA_INCLUDED
