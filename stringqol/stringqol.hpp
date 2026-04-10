@@ -66,6 +66,37 @@ public:
   // Replaces the current string object with another string object
   // @param src The string object to be replacing
   SQOL_STATUS replace(StringQOL::String &src);
+
+  // Resets the string to a clean slate
+  SQOL_STATUS reset();
+
+  // Compares the string with a string literal
+  // @param str String literal to be compared against the current string object
+  SQOL_BOOL compare(const char *str);
+
+  // Compares the current string object with another string object
+  // @param str String object to be compared against the current string object
+  SQOL_BOOL compare(StringQOL::String &str);
+
+  // Removes the top character
+  SQOL_STATUS backspace();
+
+  // Peeks the current character and returns it.
+  char peek();
+
+  // Peeks the next character and returns it.
+  // If out of bounds then it returns \0
+  char peek_next();
+
+  // Consumes/Advances to the next character and returns the current character
+  // before consuming/advancing, returns \0 if out of bounds
+  char consume();
+
+  // Matches the next character, if both match it consumes/advances and returns
+  // true if not it returns false and doesn't consume/advance
+  // @param ch Char to be matched against the next character in the current
+  // string object
+  SQOL_BOOL match(char ch);
 #ifdef SQOL_ARENA_INCLUDED
   // Adds the current string object to the arena object `a` and transfering
   // ownership to the arena
@@ -153,6 +184,30 @@ SQOL_STATUS StringQOL::String::replace(const char *str) {
 
 SQOL_STATUS StringQOL::String::replace(StringQOL::String &dst) {
   return string_replace(internal, dst.get_internal()->string);
+}
+
+SQOL_STATUS StringQOL::String::reset() { return string_reset(internal); }
+
+SQOL_STATUS StringQOL::String::compare(const char *str) {
+  return string_compare(internal, str);
+}
+
+SQOL_STATUS StringQOL::String::compare(StringQOL::String &string) {
+  return string_compare_string(internal, string.get_internal());
+}
+
+SQOL_STATUS StringQOL::String::backspace() {
+  return string_backspace(internal);
+}
+
+char StringQOL::String::peek() { return string_peek(internal); }
+
+char StringQOL::String::peek_next() { return string_peek_next(internal); }
+
+char StringQOL::String::consume() { return string_consume(internal); }
+
+SQOL_BOOL StringQOL::String::match(char ch) {
+  return string_match(internal, ch);
 }
 
 #ifdef SQOL_ARENA_INCLUDED
