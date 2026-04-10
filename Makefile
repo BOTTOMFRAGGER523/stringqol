@@ -1,8 +1,8 @@
 # Compiler settings
 CC       = gcc
 CXX      = g++
-CFLAGS   = -Wall -Wextra
-CXXFLAGS = -Wall -Wextra
+CFLAGS   = -Wall -Wextra -O2 -Werror
+CXXFLAGS = -Wall -Wextra -O2 -Werror
 
 # Paths
 SRC_ROOT    = .
@@ -33,6 +33,28 @@ bench: $(BENCH_DIR)/bench_c $(BENCH_DIR)/bench_cpp
 	@$(BENCH_DIR)/bench_c
 	@echo "--- C++ Benchmarks ---"
 	@$(BENCH_DIR)/bench_cpp
+
+package:
+	@echo "--- Packaging StringQOL ---"
+	@echo "Running make clean!"
+	@make clean
+
+	@echo "Removing $(TEST_DIR)"
+	@rm -rf $(TEST_DIR)
+
+	@echo "Removing $(BENCH_DIR)"
+	@rm -rf $(BENCH_DIR)
+
+	@echo "Removing .vscode!"
+	@rm -rf .vscode
+
+	@echo "Removing bench.py"
+	@rm -f bench.py
+
+	@echo "Renaming $(LIB_DIR) to 'include'"
+	@mv $(LIB_DIR) include
+	
+	@echo "--- Packaging complete! ---"
 
 $(TEST_DIR)/c_test: $(TEST_DIR)/c_test.c
 	$(CC) $(CFLAGS) $(INC) $< -o $@
