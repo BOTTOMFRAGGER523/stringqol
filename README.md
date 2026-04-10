@@ -16,6 +16,12 @@ Contributions are welcome!
 ### Installing
 - Run `make install` (sudo might be needed), it will install to `/usr/local/include/stringqol`
 
+### Packaging
+This option might be useful if lets say you want a script to fetch this as a dependency or you're vendoring this project.
+This option runs `make clean`, removes unnecessary directories (eg. bench test_suite and .vscode) and files (eg. bench.py), and renames `stringqol` to `include`. Be careful though as it forcefully deletes said folders and said files.
+
+To run this option simply run `make package`.
+
 ### Running tests
 - Run `make test` and you have your test results.
 
