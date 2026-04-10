@@ -139,6 +139,98 @@ static void test_string_replace_string() {
   check(s.get_internal()->size == 11, "replace String: size");
 }
 
+static void test_string_reset() {
+  StringQOL::String s((char *)"original");
+
+  check(s.reset() == SQOL_SUCCESS, "reset: success");
+  check(s.get_internal()->size == 0, "reset: size 0");
+  check(s.get_internal()->cursor == 0, "reset: cursor 0");
+  check(s.get_internal()->string[0] == '\0', "reset: null terminated");
+  check(s.get_internal()->cap == SQOL_ARENA_DEFAULT_CAP_VALUE,
+        "reset: cap default");
+}
+
+static void test_string_compare_cstr() {
+  StringQOL::String s((char *)"hello");
+
+  check(s.compare("hello") == SQOL_SUCCESS, "compare cstr equal: success");
+  check(s.compare("world") == SQOL_FAILURE, "compare cstr unequal: failure");
+  check(s.compare("") == SQOL_FAILURE, "compare cstr empty: failure");
+}
+
+static void test_string_compare_string() {
+  StringQOL::String s1((char *)"test");
+  StringQOL::String s2((char *)"test");
+  StringQOL::String s3((char *)"different");
+
+  check(s1.compare(s2) == SQOL_SUCCESS, "compare String equal: success");
+  check(s1.compare(s3) == SQOL_FAILURE, "compare String unequal: failure");
+}
+
+static void test_string_backspace() {
+  StringQOL::String s((char *)"hello");
+
+  check(s.backspace() == SQOL_SUCCESS, "backspace: success");
+  check(strcmp(s.get_internal()->string, "hell") == 0, "backspace: content");
+  check(s.get_internal()->size == 4, "backspace: size");
+
+  // Backspace on empty
+  StringQOL::String empty((char *)"");
+  check(empty.backspace() == SQOL_FAILURE, "backspace empty: failure");
+}
+
+static void test_string_peek_consume_match() {
+  StringQOL::String s((char *)"abc");
+
+  // Initial
+  check(s.get_internal()->cursor == 0, "cursor initial: 0");
+
+  // Peek
+  check(s.peek() == 'a', "peek: 'a'");
+  check(s.get_internal()->cursor == 0, "peek: cursor unchanged");
+
+  // Peek next
+  check(s.peek_next() == 'b', "peek_next: 'b'");
+  check(s.get_internal()->cursor == 0, "peek_next: cursor unchanged");
+
+  // Consume
+  check(s.consume() == 'a', "consume: 'a'");
+  check(s.get_internal()->cursor == 1, "consume: cursor incremented");
+
+  // Match success
+  check(s.match('b') == SQOL_TRUE, "match success: true");
+  check(s.get_internal()->cursor == 2, "match success: cursor incremented");
+
+  // Match failure
+  check(s.match('x') == SQOL_FALSE, "match failure: false");
+  check(s.get_internal()->cursor == 2, "match failure: cursor unchanged");
+
+  // Consume to end
+  check(s.consume() == 'c', "consume to end: 'c'");
+  check(s.get_internal()->cursor == 3, "consume to end: cursor at end");
+
+  // Peek at end
+  check(s.peek() == '\0', "peek at end: null");
+  check(s.peek_next() == '\0', "peek_next at end: null");
+
+  // Consume past end
+  check(s.consume() == '\0', "consume past end: null");
+  check(s.get_internal()->cursor == 3, "consume past end: cursor unchanged");
+}
+
+static void test_string_add_to_arena() {
+  StringQOL::Arena a(4);
+  StringQOL::String s((char *)"test");
+
+  StringQOL::String result = s.add_to_arena(a);
+  check(result.get_internal() != nullptr, "add_to_arena: not null");
+  check(result.get_internal() == s.get_internal(),
+        "add_to_arena: same internal");
+  check(s.get_internal()->arena_owned == SQOL_TRUE,
+        "add_to_arena: marked owned");
+  check(a.get_internal()->count == 1, "add_to_arena: count 1");
+}
+
 // ---------------------------------------------------------------------------
 // Arena
 // ---------------------------------------------------------------------------
@@ -232,6 +324,12 @@ int main() {
   test_string_copy_to();
   test_string_replace_cstr();
   test_string_replace_string();
+  test_string_reset();
+  test_string_compare_cstr();
+  test_string_compare_string();
+  test_string_backspace();
+  test_string_peek_consume_match();
+  test_string_add_to_arena();
   test_arena_default_construct();
   test_arena_sized_construct();
   test_arena_construct_zero_cap();
