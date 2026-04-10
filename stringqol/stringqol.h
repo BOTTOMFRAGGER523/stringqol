@@ -320,6 +320,7 @@ SQOL_STATUS string_reset(String *s) {
   NULL_CHECK(temp, SQOL_FAILURE)
 
   s->string = temp;
+  s->string[0] = '\0';
   s->size = 0;
   s->cap = SQOL_ARENA_DEFAULT_CAP_VALUE;
   s->cursor = 0;
@@ -342,6 +343,7 @@ SQOL_STATUS string_compare_string(String *s, String *string) {
   NULL_CHECK(s, SQOL_FAILURE)
   NULL_CHECK(s->string, SQOL_FAILURE)
   NULL_CHECK(string, SQOL_FAILURE)
+  NULL_CHECK(string->string, SQOL_FAILURE)
 
   if (strcmp(s->string, string->string) == 0) {
     return SQOL_SUCCESS;
@@ -409,7 +411,9 @@ SQOL_STATUS delete_string(String *s) {
   if (!s->arena_owned) {
     if (s->string)
       SQOL_FREE(s->string);
+    s->string = NULL;
     SQOL_FREE(s);
+    s = NULL;
 
     return SQOL_SUCCESS;
   }
