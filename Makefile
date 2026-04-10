@@ -36,8 +36,8 @@ bench: $(BENCH_DIR)/bench_c $(BENCH_DIR)/bench_cpp
 
 package:
 	@echo "--- Packaging StringQOL ---"
-	@echo "Running make clean!"
-	@make clean
+	@echo "Running make clean"
+	@make clean > /dev/null
 
 	@echo "Removing $(TEST_DIR)"
 	@rm -rf $(TEST_DIR)
@@ -45,7 +45,7 @@ package:
 	@echo "Removing $(BENCH_DIR)"
 	@rm -rf $(BENCH_DIR)
 
-	@echo "Removing .vscode!"
+	@echo "Removing .vscode"
 	@rm -rf .vscode
 
 	@echo "Removing bench.py"
@@ -53,6 +53,12 @@ package:
 
 	@echo "Renaming $(LIB_DIR) to 'include'"
 	@mv $(LIB_DIR) include
+
+	@echo "Making directory: include/stringqol"
+	@mkdir -p include/stringqol
+
+	@echo "Moving all files in include/ to include/stringqol"
+	@mv include/*.h* include/stringqol
 	
 	@echo "--- Packaging complete! ---"
 
