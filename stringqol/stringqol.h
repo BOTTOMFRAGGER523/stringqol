@@ -445,11 +445,20 @@ String *arena_add_string(StringArena *a, String *s) {
     a->count++;
     a->strings[a->count - 1] = s;
   } else {
+#ifdef SQOL_SHOULD_INCREMENT
     a->cap += SQOL_ARENA_DEFAULT_CAP_INCREMENT;
+#else
+    a->cap *= 2;
+#endif
 
     // Edge case
     while (a->count + 1 > a->cap) {
+#ifdef SQOL_SHOULD_INCREMENT
       a->cap += SQOL_ARENA_DEFAULT_CAP_INCREMENT;
+#else
+      a->cap *= 2;
+#endif
+      a->cap = next_power_of_2(a->cap);
     }
 
     String **temp =
@@ -490,13 +499,17 @@ SQOL_STATUS delete_arena(StringArena *a) {
 
   for (size_t i = 0; i < a->count; i++) {
     if (a->strings[i]) {
-      SQOL_FREE(a->strings[i]->string);
+      if (a->strings[i]->string) {
+        SQOL_FREE(a->strings[i]->string);
+      }
       SQOL_FREE(a->strings[i]);
     }
   }
 
   SQOL_FREE(a->strings);
+  a->strings = NULL;
   SQOL_FREE(a);
+  a = NULL;
 
   return SQOL_SUCCESS;
 }

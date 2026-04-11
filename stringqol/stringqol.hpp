@@ -14,10 +14,10 @@
 
 // Check if its not a freestanding environment and warn the user to use
 // std::string instead
-#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1 ||                        \
+/*#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1 || \
     defined(__FREESTANDING__)
 #warning "Use std::string instead!"
-#endif
+#endif*/
 
 #include "config.h"
 #include "stringqol.h"
@@ -25,19 +25,27 @@
 
 namespace StringQOL {
 // Forward declarations because of a mutual dependency
-class String;
 #ifdef SQOL_ARENA_INCLUDED
+class String;
 class Arena;
 #endif
 
 class String {
 private:
   ::String *internal;
+#ifdef SQOL_ARENA_INCLUDED
+  bool owns_memory;
+#endif
 
 public:
   // Creates a string object
   // @param str The string literal to be added to the string object
   String(const char *str);
+
+#ifdef SQOL_ARENA_INCLUDED
+  // Creates a string object owned by the arena
+  explicit String(::String *existing);
+#endif
 
   // Appends a char to the string object
   // @param ch The char to be appended
@@ -122,6 +130,9 @@ public:
   // @param cap The cap/limit of the arena
   Arena(SQOL_SIZE cap);
 
+  Arena(const Arena &) = delete;
+  Arena &operator=(const Arena &) = delete;
+
   // Creates an Arena object with the default cap value
   Arena();
 
@@ -156,7 +167,11 @@ public:
 #ifdef STRING_QOL_CPP_IMPL
 
 // String class
-StringQOL::String::String(const char *str) { internal = new_string(str); }
+StringQOL::String::String(const char *str)
+    : internal(new_string(str)), owns_memory(true) {}
+
+StringQOL::String::String(::String *existing)
+    : internal(existing), owns_memory(false) {}
 
 SQOL_STATUS StringQOL::String::append(char ch) {
   return string_append(internal, ch);
@@ -218,34 +233,32 @@ StringQOL::String StringQOL::String::add_to_arena(StringQOL::Arena &a) {
     return nullptr;
   }
 
-  return StringQOL::String(str->string);
+  return StringQOL::String(str);
 }
 #endif
 
 ::String *StringQOL::String::get_internal() { return internal; }
 
-StringQOL::String::~String() { delete_string(internal); }
+StringQOL::String::~String() {
+  if (owns_memory && internal) {
+    delete_string(internal);
+  }
+}
 
 // Arena class
 
-StringQOL::Arena::Arena(SQOL_SIZE cap) {
-  if (cap < 1) {
-    cap = SQOL_ARENA_DEFAULT_CAP_VALUE;
-  }
-  internal = new_string_arena(cap);
-}
+StringQOL::Arena::Arena(SQOL_SIZE cap) : internal(new_string_arena(cap)) {}
 
-StringQOL::Arena::Arena() {
-  internal = new_string_arena(SQOL_ARENA_DEFAULT_CAP_VALUE);
-}
+StringQOL::Arena::Arena()
+    : internal(new_string_arena(SQOL_ARENA_DEFAULT_CAP_VALUE)) {}
 
 StringQOL::String StringQOL::Arena::add_string(StringQOL::String &str) {
   return StringQOL::String(
-      arena_add_string(internal, str.get_internal())->string);
+      arena_add_string(internal, new_string(str.get_internal()->string)));
 }
 
 StringQOL::String StringQOL::Arena::add_string(const char *str) {
-  return StringQOL::String(arena_add_string(internal, new_string(str))->string);
+  return StringQOL::String(arena_add_string(internal, new_string(str)));
 }
 
 SQOL_STATUS StringQOL::Arena::reset(SQOL_SIZE cap) {
