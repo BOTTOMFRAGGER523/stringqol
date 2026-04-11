@@ -29,9 +29,7 @@ test: $(TEST_DIR)/c_test $(TEST_DIR)/cpp_test
 	@$(TEST_DIR)/cpp_test
 
 bench: $(BENCH_DIR)/bench_c $(BENCH_DIR)/bench_cpp
-	@echo "--- C Benchmarks ---"
 	@$(BENCH_DIR)/bench_c
-	@echo "--- C++ Benchmarks ---"
 	@$(BENCH_DIR)/bench_cpp
 
 package:
@@ -86,5 +84,5 @@ uninstall:
 	@echo "Done."
 
 clean:
-	@rm -f $(TEST_DIR)/c_test $(TEST_DIR)/cpp_test
-	@rm -f $(BENCH_DIR)/bench_c $(BENCH_DIR)/bench_cpp
+	@rm -f $(TEST_DIR)/c_test $(TEST_DIR)/cpp_test $(TEST_DIR)/c_test.exe $(TEST_DIR)/cpp_test.exe
+	@rm -f $(BENCH_DIR)/bench_c $(BENCH_DIR)/bench_cpp $(TEST_DIR)/c_test.exe $(TEST_DIR)/cpp_test.exe
